@@ -14,7 +14,7 @@
         <input type="submit" value="Send Request">
     </form>
     <hr>
-    <h2>Response:</h2>
+    <h2>SSL Certificates Received:</h2>
     <div>
         <pre>
         <%
@@ -24,12 +24,12 @@
                     URL url = new URL(urlString);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
+                    int responseCode = conn.getResponseCode();
                     
                     if (conn instanceof HttpsURLConnection) {
                         HttpsURLConnection httpsConn = (HttpsURLConnection) conn;
                         httpsConn.connect();
                         
-                        out.print("<br><strong>SSL Certificates Received:</strong><br>");
                         for (Certificate cert : httpsConn.getServerCertificates()) {
                             out.print("Type: " + cert.getType() + "<br>");
                             out.print("Public Key: " + cert.getPublicKey().toString() + "<br>");
@@ -44,7 +44,9 @@
                         content.append(inputLine).append("\n");
                     }
                     in.close();
-                    out.print(content.toString());
+                    
+                    out.print("<h2>Response Status Code:</h2><pre>" + responseCode + "</pre>");
+                    out.print("<h2>Response Received:</h2><pre>" + content.toString() + "</pre>");
                 } catch (SSLException sslEx) {
                     out.print("SSL Error: " + sslEx.getMessage() + "<br>Cause: " + sslEx.getCause() + "<br>Trace:<br>");
                     for (StackTraceElement elem : sslEx.getStackTrace()) {
