@@ -21,7 +21,23 @@
 
             try {
                 if (urlString != null && !urlString.trim().isEmpty()) {
-                    disableSSLValidation(); // Bypass SSL validation to retrieve certificates
+
+                    // Bypass SSL validation to retrieve certificates
+                    TrustManager[] trustAllCertificates = new TrustManager[]{
+                        new X509TrustManager() {
+                            public X509Certificate[] getAcceptedIssuers() { return null; }
+                            public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                            public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+                        }
+                    };
+
+                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    sslContext.init(null, trustAllCertificates, new java.security.SecureRandom());
+                    HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+
+                    // Disable hostname verification
+                    HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+
                     URL url = new URL(urlString);
                     if (url.getProtocol().equalsIgnoreCase("https")) {
                         HttpsURLConnection httpsConn = (HttpsURLConnection) url.openConnection();
@@ -66,27 +82,3 @@
     </div>
 </body>
 </html>
-
-<%
-    // Method to disable SSL validation and allow retrieval of invalid certificates
-    private void disableSSLValidation() throws Exception {
-        TrustManager[] trustAllCertificates = new TrustManager[]{
-            new X509TrustManager() {
-                public X509Certificate[] getAcceptedIssuers() {
-                    return null;
-                }
-                public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                }
-                public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                }
-            }
-        };
-
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, trustAllCertificates, new java.security.SecureRandom());
-        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-
-        // Disable hostname verification
-        HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-    }
-%>
