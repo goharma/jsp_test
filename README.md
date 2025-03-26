@@ -1,7 +1,7 @@
 # jsp_test
 
 ```
-<%@ page import="java.io.BufferedReader, java.io.InputStreamReader, java.net.HttpURLConnection, java.net.URL, javax.net.ssl.SSLException" %>
+<%@ page import="java.io.BufferedReader, java.io.InputStreamReader, java.net.HttpURLConnection, java.net.URL, javax.net.ssl.SSLException, javax.net.ssl.HttpsURLConnection, java.security.cert.Certificate" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
@@ -24,6 +24,18 @@
                     URL url = new URL(urlString);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
+                    
+                    if (conn instanceof HttpsURLConnection) {
+                        HttpsURLConnection httpsConn = (HttpsURLConnection) conn;
+                        httpsConn.connect();
+                        
+                        out.print("<br><strong>SSL Certificates Received:</strong><br>");
+                        for (Certificate cert : httpsConn.getServerCertificates()) {
+                            out.print("Type: " + cert.getType() + "<br>");
+                            out.print("Public Key: " + cert.getPublicKey().toString() + "<br>");
+                            out.print("Encoded: " + new String(cert.getEncoded()) + "<br><br>");
+                        }
+                    }
                     
                     BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                     String inputLine;
