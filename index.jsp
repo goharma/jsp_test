@@ -27,7 +27,12 @@
             // Open connection
             URL url = new URL(targetUrl);
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-            conn.setHostnameVerifier((hostname, session) -> true); // Ignore hostname verification
+            conn.setHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            }); // Ignore hostname verification
             conn.connect();
             
             // Retrieve certificates
