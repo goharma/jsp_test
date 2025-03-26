@@ -1,23 +1,26 @@
+import javax.net.ssl.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import javax.net.ssl.HttpsURLConnection;
 import java.security.cert.Certificate;
-import java.util.Scanner;
+import java.security.cert.X509Certificate;
 
 public class SSLRequestConsoleApp {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter URL: ");
-        String urlString = scanner.nextLine();
-        scanner.close();
-
-        StringBuilder sslInfo = new StringBuilder();
-        StringBuilder responseContent = new StringBuilder();
-        int responseCode = -1;
-
         try {
+            if (args.length < 1) {
+                System.out.println("Usage: java SSLRequestConsoleApp <URL>");
+                return;
+            }
+            
+            String urlString = args[0];
+            disableSSLValidation(); // Bypass SSL validation to retrieve certificates
+
+            StringBuilder sslInfo = new StringBuilder();
+            StringBuilder responseContent = new StringBuilder();
+            int responseCode = -1;
+
             if (urlString != null && !urlString.trim().isEmpty()) {
                 URL url = new URL(urlString);
                 if (url.getProtocol().equalsIgnoreCase("https")) {
@@ -52,11 +55,15 @@ public class SSLRequestConsoleApp {
                     in.close();
                 }
             }
-        } catch (Exception e) {
-            responseContent.append("Error: ").append(e.getMessage());
-        }
 
-        System.out.println("\nResponse Status Code: " + responseCode);
-        System.out.println("\nResponse Received:\n" + responseContent.toString());
+            System.out.println("\nResponse Status Code: " + responseCode);
+            System.out.println("\nResponse Received:\n" + responseContent.toString());
+
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
     }
-}
+
+    // Method to disable SSL validation and allow retrieval of invalid certificates
+    private static void disableSSLValidation() throws Exception {
+        TrustManager[] trustAllCertifica
