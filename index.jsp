@@ -11,57 +11,60 @@
         <input type="submit" value="Send Request">
     </form>
     <hr>
-    <h2>SSL Certificates Received:</h2>
     <div>
         <pre>
         <%
             String urlString = request.getParameter("urlInput");
-            HttpsURLConnection httpsConn = null;
+            StringBuilder sslInfo = new StringBuilder();
+            StringBuilder responseContent = new StringBuilder();
+            int responseCode = -1;
+            
             try {
                 if (urlString != null && !urlString.trim().isEmpty()) {
                     URL url = new URL(urlString);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    int responseCode = conn.getResponseCode();
-                    
-                    if (conn instanceof HttpsURLConnection) {
-                        httpsConn = (HttpsURLConnection) conn;
+                    if (url.getProtocol().equalsIgnoreCase("https")) {
+                        HttpsURLConnection httpsConn = (HttpsURLConnection) url.openConnection();
+                        httpsConn.setRequestMethod("GET");
                         httpsConn.connect();
+                        
+                        sslInfo.append("<h2>SSL Certificates:</h2>");
+                        for (Certificate cert : httpsConn.getServerCertificates()) {
+                            sslInfo.append("Type: ").append(cert.getType()).append("<br>");
+                            sslInfo.append("Public Key: ").append(cert.getPublicKey().toString()).append("<br>");
+                            sslInfo.append("Encoded: ").append(new String(cert.getEncoded())).append("<br><br>");
+                        }
+                        
+                        responseCode = httpsConn.getResponseCode();
+                        BufferedReader in = new BufferedReader(new InputStreamReader(httpsConn.getInputStream()));
+                        String inputLine;
+                        while ((inputLine = in.readLine()) != null) {
+                            responseContent.append(inputLine).append("\n");
+                        }
+                        in.close();
+                    } else {
+                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                        conn.setRequestMethod("GET");
+                        responseCode = conn.getResponseCode();
+                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        String inputLine;
+                        while ((inputLine = in.readLine()) != null) {
+                            responseContent.append(inputLine).append("\n");
+                        }
+                        in.close();
                     }
-                    
-                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                    String inputLine;
-                    StringBuilder content = new StringBuilder();
-                    while ((inputLine = in.readLine()) != null) {
-                        content.append(inputLine).append("\n");
-                    }
-                    in.close();
-                    
-                    out.print("<h2>Response Status Code:</h2><pre>" + responseCode + "</pre>");
-                    out.print("<h2>Response Received:</h2><pre>" + content.toString() + "</pre>");
                 }
             } catch (SSLException sslEx) {
-                out.print("SSL Error: " + sslEx.getMessage() + "<br>Cause: " + sslEx.getCause() + "<br>Trace:<br>");
+                sslInfo.append("SSL Error: ").append(sslEx.getMessage()).append("<br>Cause: ").append(sslEx.getCause()).append("<br>Trace:<br>");
                 for (StackTraceElement elem : sslEx.getStackTrace()) {
-                    out.print(elem.toString() + "<br>");
+                    sslInfo.append(elem.toString()).append("<br>");
                 }
             } catch (Exception e) {
-                out.print("Error: " + e.getMessage());
+                responseContent.append("Error: ").append(e.getMessage());
             }
             
-            // Always attempt to print SSL certificates if available
-            if (httpsConn != null) {
-                try {
-                    out.print("<h2>SSL Certificates:</h2>");
-                    for (Certificate cert : httpsConn.getServerCertificates()) {
-                        out.print("Type: " + cert.getType() + "<br>");
-                        out.print("Public Key: " + cert.getPublicKey().toString() + "<br>");
-                        out.print("Encoded: " + new String(cert.getEncoded()) + "<br><br>");
-                    }
-                } catch (Exception certEx) {
-                    out.print("Error retrieving SSL certificates: " + certEx.getMessage());
-                }
-            }
+            out.print(sslInfo.toString());
+            out.print("<h2>Response Status Code:</h2><pre>" + responseCode + "</pre>");
+            out.print("<h2>Response Received:</h2><pre>" + responseContent.toString() + "</pre>");
         %>
         </pre>
     </div>
