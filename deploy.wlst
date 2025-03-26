@@ -1,0 +1,13 @@
+connect('weblogic_username', 'weblogic_password', 't3://weblogic_host:weblogic_port')
+
+appName = 'test'
+appPath = '/path/to/test.war'
+
+deactivateApp(appName)
+deleteApp(appName)
+
+deploy(appName, appPath, targets='AdminServer')
+startApplication(appName)
+
+disconnect()
+exit()
