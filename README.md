@@ -1,7 +1,7 @@
 # jsp_test
 
 ```
-<%@ page import="java.io.BufferedReader, java.io.InputStreamReader, java.net.HttpURLConnection, java.net.URL" %>
+<%@ page import="java.io.BufferedReader, java.io.InputStreamReader, java.net.HttpURLConnection, java.net.URL, javax.net.ssl.SSLException" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
@@ -33,6 +33,11 @@
                     }
                     in.close();
                     out.print(content.toString());
+                } catch (SSLException sslEx) {
+                    out.print("SSL Error: " + sslEx.getMessage() + "<br>Cause: " + sslEx.getCause() + "<br>Trace:<br>");
+                    for (StackTraceElement elem : sslEx.getStackTrace()) {
+                        out.print(elem.toString() + "<br>");
+                    }
                 } catch (Exception e) {
                     out.print("Error: " + e.getMessage());
                 }
