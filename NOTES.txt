@@ -1,0 +1,12 @@
+- name: Remove SSL truststore option from string with variable path
+  hosts: localhost
+  gather_facts: false
+  vars:
+    my_string: "some_command -Djavax.net.ssl.trustStore=/opt/bea/certs other_options"
+  tasks:
+    - name: Remove the truststore option with variable path
+      set_fact:
+        modified_string: "{{ my_string | regex_replace('-Djavax\\.net\\.ssl\\.trustStore=[^\\s]+', '') | regex_replace('\\s+', ' ') | trim }}"
+    - name: Display the modified string
+      debug:
+        var: modified_string
